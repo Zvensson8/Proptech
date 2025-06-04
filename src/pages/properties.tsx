@@ -18,51 +18,19 @@ import {
   TableCell
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import { fetchRecords } from "../utils/airtable";
 
-// Sample data
-const propertiesData = [
-  { 
-    id: 1, 
-    name: "Kontorsbyggnad A", 
-    address: "Storgatan 1, Stockholm", 
-    category: "Kontor", 
-    area: 2500,
-    components: 5,
-    workOrders: 3
-  },
-  { 
-    id: 2, 
-    name: "Lagerlokal B", 
-    address: "Industrivägen 12, Göteborg", 
-    category: "Lager", 
-    area: 4200,
-    components: 3,
-    workOrders: 1
-  },
-  { 
-    id: 3, 
-    name: "Bostadshus C", 
-    address: "Parkgatan 45, Malmö", 
-    category: "Bostad", 
-    area: 1800,
-    components: 4,
-    workOrders: 2
-  },
-  { 
-    id: 4, 
-    name: "Butiksfastighet D", 
-    address: "Köpcentrum 3, Uppsala", 
-    category: "Handel", 
-    area: 3200,
-    components: 0,
-    workOrders: 1
-  },
-];
+const TABLE_NAME = "Properties";
 
 const PropertiesPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
-  
+  const [propertiesData, setPropertiesData] = React.useState<any[]>([])
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    fetchRecords(TABLE_NAME).then(setPropertiesData).catch(() => setPropertiesData([]))
+  }, [])
+
   const filteredProperties = propertiesData.filter(property => {
     const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           property.address.toLowerCase().includes(searchQuery.toLowerCase());
