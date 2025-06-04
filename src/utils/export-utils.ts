@@ -1,36 +1,32 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, HeadingLevel, TextRun } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  Table,
+  TableCell,
+  TableRow,
+  HeadingLevel,
+  TextRun,
+} from "docx";
 import { saveAs } from "file-saver";
 
-// If file-saver import fails, provide a fallback implementation
-let saveAs: (blob: Blob, filename: string) => void;
+// Fallback implementation in case file-saver is unavailable at runtime
+// (should rarely happen since it is bundled with the app)
+const fallbackSaveAs = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+};
 
-try {
-  // Try to import file-saver
-  const fileSaver = require('file-saver');
-  saveAs = fileSaver.saveAs;
-} catch (error) {
-  // Fallback implementation if file-saver is not available
-  saveAs = (blob: Blob, filename: string) => {
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
-    
-    // Create a temporary anchor element
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    
-    // Append to the document, click it, and remove it
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up the URL
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-  };
-}
+const saveFile = typeof saveAs === "function" ? saveAs : fallbackSaveAs;
 
 // Helper function to convert data to PDF
 export const exportToPDF = (
@@ -233,5 +229,5 @@ export const exportToWord = async (
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   });
-  saveAs(blob, `${filename}.docx`);
+  saveFile(blob, `${filename}.docx`);
 };
