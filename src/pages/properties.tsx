@@ -1,3 +1,5 @@
+// src/pages/properties.tsx
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -9,7 +11,6 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Chip,
   Table,
   TableHeader,
   TableColumn,
@@ -18,28 +19,34 @@ import {
   TableCell
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
-import { fetchRecords } from "../utils/airtable";
 
-const TABLE_NAME = "Properties";
+// *** ÄNDRAT: Använd fetchFastigheter i stället för fetchRecords ***
+import { fetchFastigheter } from "../utils/airtableService";
 
 const PropertiesPage: React.FC = () => {
-  const [propertiesData, setPropertiesData] = React.useState<any[]>([])
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
+  const [propertiesData, setPropertiesData] = React.useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    fetchRecords(TABLE_NAME).then(setPropertiesData).catch(() => setPropertiesData([]))
-  }, [])
+    // *** ÄNDRAT: Anropar Airtable‐servicen ***
+    fetchFastigheter()
+      .then(records => {
+        // records är en array av { id, fields: { Fastighet, Adress, Typ av fastighet, LOA, … } }
+        setPropertiesData(records.map(r => ({ id: r.id, ...r.fields })));
+      })
+      .catch(() => setPropertiesData([]));
+  }, []);
 
   const filteredProperties = propertiesData.filter(property => {
-    const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          property.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || property.category === selectedCategory;
-    
+    const matchesSearch =
+      property.Fastighet?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.Adress?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || property["Typ av fastighet"] === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const categories = Array.from(new Set(propertiesData.map(p => p.category)));
+  const categories = Array.from(new Set(propertiesData.map(p => p["Typ av fastighet"])));
 
   return (
     <div className="space-y-6">
@@ -57,17 +64,14 @@ const PropertiesPage: React.FC = () => {
             startContent={<Icon icon="lucide:search" className="text-default-400" />}
             className="w-full sm:w-64"
           />
-          
+
           <Dropdown>
             <DropdownTrigger>
-              <Button 
-                variant="flat" 
-                endContent={<Icon icon="lucide:chevron-down" />}
-              >
+              <Button variant="flat" endContent={<Icon icon="lucide:chevron-down" />}>
                 {selectedCategory || "Filtrera kategori"}
               </Button>
             </DropdownTrigger>
-            <DropdownMenu 
+            <DropdownMenu
               aria-label="Kategorier"
               selectionMode="single"
               selectedKeys={selectedCategory ? [selectedCategory] : []}
@@ -87,10 +91,7 @@ const PropertiesPage: React.FC = () => {
         </div>
 
         <Link to="/properties/new">
-          <Button 
-            color="primary"
-            startContent={<Icon icon="lucide:plus" />}
-          >
+          <Button color="primary" startContent={<Icon icon="lucide:plus" />}>
             Ny fastighet
           </Button>
         </Link>
@@ -98,13 +99,7 @@ const PropertiesPage: React.FC = () => {
 
       <Card>
         <CardBody>
-          <Table 
-            removeWrapper 
-            aria-label="Fastigheter"
-            classNames={{
-              th: "bg-content2"
-            }}
-          >
+          <Table removeWrapper aria-label="Fastigheter">
             <TableHeader>
               <TableColumn>NAMN</TableColumn>
               <TableColumn>ADRESS</TableColumn>
@@ -119,41 +114,20 @@ const PropertiesPage: React.FC = () => {
                 <TableRow key={property.id}>
                   <TableCell>
                     <Link to={`/properties/${property.id}`} className="text-primary hover:underline">
-                      {property.name}
+                      {property.Fastighet}
                     </Link>
                   </TableCell>
-                  <TableCell>{property.address}</TableCell>
+                  <TableCell>{property.Adress}</TableCell>
+                  <TableCell>{property["Typ av fastighet"]}</TableCell>
+                  <TableCell>{property.LOA}</TableCell>
+                  <TableCell>{property.Komponenter ?? 0}</TableCell>
+                  <TableCell>{property["Driftbeställningar"] ?? 0}</TableCell>
                   <TableCell>
-                    <Chip 
-                      variant="flat" 
-                      size="sm"
-                      color={
-                        property.category === "Kontor" ? "primary" :
-                        property.category === "Lager" ? "secondary" :
-                        property.category === "Bostad" ? "success" :
-                        "default"
-                      }
-                    >
-                      {property.category}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>{property.area}</TableCell>
-                  <TableCell>{property.components}</TableCell>
-                  <TableCell>{property.workOrders}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Link to={`/properties/${property.id}`}>
-                        <Button isIconOnly size="sm" variant="flat">
-                          <Icon icon="lucide:eye" />
-                        </Button>
-                      </Link>
-                      <Button isIconOnly size="sm" variant="flat">
-                        <Icon icon="lucide:edit" />
+                    <Link to={`/properties/${property.id}`}>
+                      <Button variant="flat" size="sm" startContent={<Icon icon="lucide:chevron-right" />}>
+                        Visa
                       </Button>
-                      <Button isIconOnly size="sm" variant="flat" color="danger">
-                        <Icon icon="lucide:trash" />
-                      </Button>
-                    </div>
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}
