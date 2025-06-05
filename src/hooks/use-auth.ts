@@ -18,7 +18,7 @@ type AuthContextType = {
   user: SimpleUser | null;
   loading: boolean;
   isAdmin: boolean;
-  signIn: (email: string, password: string) => void;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => void;
 };
 
@@ -27,7 +27,9 @@ const AuthContext = React.createContext<AuthContextType>({
   user: null,
   loading: false,
   isAdmin: false,
-  signIn: function() {},
+  signIn: async function() {
+    return {};
+  },
   signOut: function() {}
 });
 
@@ -39,24 +41,26 @@ export function AuthProvider(props) {
   const [isAdmin, setIsAdmin] = React.useState(false);
 
   // Handle sign in
-  function doSignIn(email, password) {
+  async function doSignIn(email: string, password: string): Promise<{ error?: string }> {
     setLoading(true);
-    
+
+    let error: string | undefined;
+
     // Find user in mock data
-    for (let i = 0; i < mockUsers.length; i++) {
-      const u = mockUsers[i];
-      if (u.email === email && u.password === password) {
-        setUser({
-          id: "user-" + Date.now(),
-          email: u.email,
-          name: u.email.split('@')[0]
-        });
-        setIsAdmin(u.role === 'admin');
-        break;
-      }
+    const u = mockUsers.find((m) => m.email === email && m.password === password);
+    if (u) {
+      setUser({
+        id: "user-" + Date.now(),
+        email: u.email,
+        name: u.email.split('@')[0]
+      });
+      setIsAdmin(u.role === 'admin');
+    } else {
+      error = 'Invalid credentials';
     }
-    
+
     setLoading(false);
+    return { error };
   }
 
   // Handle sign out
