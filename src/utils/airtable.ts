@@ -1,7 +1,7 @@
 import Airtable from 'airtable'
 
 const apiKey = import.meta.env.VITE_AIRTABLE_API_KEY
-const baseId = import.meta.env.VITE_AIRTABLE_BASE_ID
+const baseId = (import.meta.env.VITE_AIRTABLE_BASE_ID ?? '').replace(/\.$/, '')
 
 const base = new Airtable({ apiKey }).base(baseId)
 
