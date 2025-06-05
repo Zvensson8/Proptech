@@ -54,9 +54,7 @@ const NewPropertyPage: React.FC = () => {
   
   const handleSubmit = () => {
     // In a real app, this would save to the database
-    console.log("Saving property:", property);
-    console.log("With contractors:", contractors);
-    
+
     // Redirect to properties list
     history.push("/properties");
   };
