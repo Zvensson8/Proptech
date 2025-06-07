@@ -28,7 +28,12 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 // *** ÄNDRAT: Importera fetchKomponenter, fetchFastigheter, fetchKomponenttyper, saveKomponent ***
-import { fetchKomponenter, fetchFastigheter, fetchKomponenttyper, saveKomponent } from "../utils/airtableService";
+import {
+  fetchKomponenter,
+  fetchFastigheter,
+  fetchKomponenttyper,
+  saveKomponent
+} from "../utils/supabaseService";
 
 const ComponentInstancesPage: React.FC = () => {
   const [components, setComponents] = React.useState<any[]>([]);
@@ -44,15 +49,15 @@ const ComponentInstancesPage: React.FC = () => {
 
   React.useEffect(() => {
     fetchKomponenter()
-      .then(records => setComponents(records.map(r => ({ id: r.id, ...r.fields }))))
+      .then(records => setComponents(records))
       .catch(() => setComponents([]));
 
     fetchFastigheter()
-      .then(records => setProperties(records.map(r => r.fields.Fastighet)))
+      .then(records => setProperties(records.map(r => r.Fastighet)))
       .catch(() => setProperties([]));
 
     fetchKomponenttyper()
-      .then(records => setTypes(records.map(r => r.fields.Komponent)))
+      .then(records => setTypes(records.map(r => r.Komponent)))
       .catch(() => setTypes([]));
   }, []);
 

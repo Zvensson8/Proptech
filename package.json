@@ -24,8 +24,7 @@
     "xlsx": "^0.18.5",
     "docx": "^8.5.0",
     "file-saver": "^2.0.5",
-    "source-map-js": "^1.2.1",
-    "airtable": "^0.12.2"
+    "source-map-js": "^1.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
