@@ -62,7 +62,7 @@ export async function saveKomponenttyp(fields: any, id?: string) {
   return data
 }
 
-export async function fetchKomponentfalt() {
+export async function fetchKomponentfält() {
   const { data, error } = await supabase.from('Komponentfält').select('*')
   if (error) throw error
   return data
@@ -144,4 +144,3 @@ export async function deleteRecord(table: string, id: string) {
   const { error } = await supabase.from(table).delete().eq('id', id)
   if (error) throw error
 }
-
