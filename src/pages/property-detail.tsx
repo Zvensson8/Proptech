@@ -12,8 +12,7 @@ import {
   SelectItem 
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
-// *** ÄNDRAT: Anropa Airtable‐service här ***
-import { fetchFastigheter, saveFastighet } from "../utils/airtableService";
+import { fetchFastighet, saveFastighet } from "../utils/supabaseService";
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,12 +21,11 @@ const PropertyDetailPage: React.FC = () => {
   const [propertyInfo, setPropertyInfo] = React.useState<any>({});
 
   React.useEffect(() => {
-    fetchFastigheter()
-      .then(records => {
-        const rec = records.find(r => r.id === id);
+    fetchFastighet(id)
+      .then((rec) => {
         if (rec) {
-          setProperty(rec);
-          setPropertyInfo(rec.fields);
+          setProperty({ id: rec.id, fields: rec });
+          setPropertyInfo(rec);
         }
       })
       .catch(() => {});
@@ -50,7 +48,8 @@ const PropertyDetailPage: React.FC = () => {
       id
     )
       .then(updated => {
-        setProperty({ id, fields: updated.fields });
+        setProperty({ id, fields: updated });
+        setPropertyInfo(updated);
       })
       .finally(() => setIsEditingInfo(false));
   };

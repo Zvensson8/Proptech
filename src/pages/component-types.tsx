@@ -28,7 +28,7 @@ import {
   fetchKomponenttyper,
   saveKomponenttyp,
   fetchKomponentfält
-} from "../utils/airtableService";
+} from "../utils/supabaseService";
 
 const ComponentTypesPage: React.FC = () => {
   const [componentTypes, setComponentTypes] = React.useState<any[]>([]);
@@ -41,15 +41,13 @@ const ComponentTypesPage: React.FC = () => {
   React.useEffect(() => {
     fetchKomponenttyper()
       .then(records => {
-        // records: { id, fields: { Komponent, Beskrivning, "Tillåtna fält": [recIDs] } }
-        setComponentTypes(records.map(r => ({ id: r.id, ...r.fields })));
+        setComponentTypes(records);
       })
       .catch(() => setComponentTypes([]));
 
     fetchKomponentfält()
       .then(records => {
-        // records: { id, fields: { Fältnamn, "Komponenttyper": [recIDs] } }
-        setComponentFields(records.map(r => ({ id: r.id, ...r.fields })));
+        setComponentFields(records);
       })
       .catch(() => setComponentFields([]));
   }, []);

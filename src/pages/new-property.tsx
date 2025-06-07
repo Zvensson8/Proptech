@@ -12,8 +12,7 @@ import {
   SelectItem
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
-// *** ÄNDRAT: Importera saveFastighet från airtableService ***
-import { saveFastighet } from "../utils/airtableService";
+import { saveFastighet } from "../utils/supabaseService";
 
 const NewPropertyPage: React.FC = () => {
   const history = useHistory();
@@ -34,7 +33,7 @@ const NewPropertyPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // *** ÄNDRAT: Spara till Airtable med saveFastighet ***
+    // Save to Supabase
     await saveFastighet({
       Fastighet: property.Fastighet,
       Adress: property.Adress,

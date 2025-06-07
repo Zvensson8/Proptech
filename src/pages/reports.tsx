@@ -19,14 +19,12 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import ExportButton from "../components/export-button";
-
-// *** ÄNDRAT: Importera fetch‐funktioner från airtableService ***
 import {
   fetchFastigheter,
   fetchKomponenttyper,
   fetchKomponenter,
   fetchDriftarenden
-} from "../utils/airtableService";
+} from "../utils/supabaseService";
 
 const ReportsPage: React.FC = () => {
   const [properties, setProperties] = React.useState<string[]>([]);
@@ -41,22 +39,22 @@ const ReportsPage: React.FC = () => {
     "Komponent", "Komponenttyp", "Fastighet", "Tillverkare", "Modell", "Status"
   ]);
 
-  // Hämta allt från Airtable vid inläsning
+  // Hämta allt från Supabase vid inläsning
   React.useEffect(() => {
     fetchFastigheter()
-      .then(records => setProperties(records.map(r => r.fields.Fastighet)))
+      .then(records => setProperties(records.map(r => r.Fastighet)))
       .catch(() => setProperties([]));
 
     fetchKomponenttyper()
-      .then(records => setComponentTypes(records.map(r => r.fields.Komponent)))
+      .then(records => setComponentTypes(records.map(r => r.Komponent)))
       .catch(() => setComponentTypes([]));
 
     fetchKomponenter()
-      .then(records => setComponentData(records.map(r => ({ id: r.id, ...r.fields }))))
+      .then(records => setComponentData(records))
       .catch(() => setComponentData([]));
 
     fetchDriftarenden()
-      .then(records => setWorkOrdersData(records.map(r => ({ id: r.id, ...r.fields }))))
+      .then(records => setWorkOrdersData(records))
       .catch(() => setWorkOrdersData([]));
   }, []);
 

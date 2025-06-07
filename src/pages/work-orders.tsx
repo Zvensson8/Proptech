@@ -28,7 +28,7 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 // *** ÄNDRAT: Importera fetchDriftarenden och saveDriftarende ***
-import { fetchDriftarenden, saveDriftarende, fetchFastigheter } from "../utils/airtableService";
+import { fetchDriftarenden, saveDriftarende, fetchFastigheter } from "../utils/supabaseService";
 
 const statuses = ["Ej påbörjad", "Pågående", "Klar", "Avbruten"];
 const WorkOrdersPage: React.FC = () => {
@@ -43,12 +43,11 @@ const WorkOrdersPage: React.FC = () => {
 
   React.useEffect(() => {
     fetchDriftarenden()
-      .then(records => setWorkOrders(records.map(r => ({ id: r.id, ...r.fields }))))
+      .then(records => setWorkOrders(records))
       .catch(() => setWorkOrders([]));
 
-    // Hämta listan av fastigheter för dropdown
     fetchFastigheter()
-      .then(records => setProperties(records.map(r => r.fields.Fastighet)))
+      .then(records => setProperties(records.map(r => r.Fastighet)))
       .catch(() => setProperties([]));
   }, []);
 

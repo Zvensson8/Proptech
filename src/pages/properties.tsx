@@ -21,7 +21,7 @@ import {
 import { Icon } from "@iconify/react";
 
 // *** ÄNDRAT: Använd fetchFastigheter i stället för fetchRecords ***
-import { fetchFastigheter } from "../utils/airtableService";
+import { fetchFastigheter } from "../utils/supabaseService";
 
 const PropertiesPage: React.FC = () => {
   const [propertiesData, setPropertiesData] = React.useState<any[]>([]);
@@ -29,11 +29,9 @@ const PropertiesPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    // *** ÄNDRAT: Anropar Airtable‐servicen ***
     fetchFastigheter()
       .then(records => {
-        // records är en array av { id, fields: { Fastighet, Adress, Typ av fastighet, LOA, … } }
-        setPropertiesData(records.map(r => ({ id: r.id, ...r.fields })));
+        setPropertiesData(records);
       })
       .catch(() => setPropertiesData([]));
   }, []);

@@ -7,13 +7,13 @@ Additional references:
 - [Getting started with Vite](https://vitejs.dev/guide/)
 - [Tailwind documentation](https://tailwindcss.com/docs/installation)
 
-## Airtable Integration
+## Supabase Integration
 
-Install the Airtable package and set the following environment variables in an `.env` file (see `.env.example`):
+Set the following environment variables in an `.env` file (see `.env.example`):
 
 ```
-VITE_AIRTABLE_API_KEY=your_api_key
-VITE_AIRTABLE_BASE_ID=your_base_id
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_public_anon_key
 ```
 
-Use the helpers in `src/utils/airtable.ts` to fetch or modify records.
+The Supabase client is configured in `src/utils/supabaseClient.ts` and helper functions are available in `src/utils/supabaseService.ts`.
