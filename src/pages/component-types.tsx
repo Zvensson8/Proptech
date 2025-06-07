@@ -14,9 +14,9 @@ import {
 } from "../utils/supabaseService";
 
 // Definiera typer för datamodellerna
-interface Komponentfält { 
-  id: string; 
-  Fältnamn: string; 
+interface Komponentfält {
+  id: string;
+  Fältnamn: string;
   // ...övriga fältegenskaper om de finns 
 }
 interface Komponenttyp {
@@ -70,42 +70,41 @@ const ComponentTypesPage: React.FC = () => {
     onOpen();
   };
 
-const saveCurrent = async () => {
-  if (!currentComponentType) return;
-  try {
-    const fields: Partial<Komponenttyp> = {
-      Komponent: currentComponentType.Komponent,
-      Beskrivning: currentComponentType.Beskrivning || "",
-      "Tillåtna fält": selectedFields
-    };
-    const recordId = currentComponentType.id;
-    await saveKomponenttyp(fields, recordId);
+  const saveCurrent = async () => {
+    if (!currentComponentType) return;
+    try {
+      const fields: Partial<Komponenttyp> = {
+        Komponent: currentComponentType.Komponent,
+        Beskrivning: currentComponentType.Beskrivning || "",
+        "Tillåtna fält": selectedFields
+      };
+      const recordId = currentComponentType.id;
+      await saveKomponenttyp(fields, recordId);
 
-    // Uppdatera listan lokalt istället för hel reload
-    if (recordId) {
-      // Uppdatera befintlig i state
-      setComponentTypes(prev =>
-        prev.map(ct =>
-          ct.id === recordId ? { ...ct, ...fields } as Komponenttyp : ct
-        )
-      );
-    } else {
-      // Lägg till ny i state
-      const refreshedList = await fetchKomponenttyper().catch(() => null);
+      // Uppdatera listan lokalt istället för hel reload
+      if (recordId) {
+        // Uppdatera befintlig i state
+        setComponentTypes(prev =>
+          prev.map(ct =>
+            ct.id === recordId ? { ...ct, ...fields } as Komponenttyp : ct
+          )
+        );
+      } else {
+        // Lägg till ny i state
+        const refreshedList = await fetchKomponenttyper().catch(() => null);
 
-      if (refreshedList) {
-        setComponentTypes(refreshedList); // <-- ÄNDRAD HÄR
+        if (refreshedList) {
+          setComponentTypes(refreshedList); // <-- ÄNDRAD HÄR
+        }
+        // Annars behåller vi befintlig lista
       }
-      // Annars behåller vi befintlig lista
+
+      onOpenChange(false); // stäng modalen
+    } catch (error: any) {
+      console.error("Fel vid sparande av komponenttyp:", error);
+      alert("Kunde inte spara komponenttypen. Kontrollera data och försök igen.");
     }
-
-    onOpenChange(false); // stäng modalen
-  } catch (error: any) {
-    console.error("Fel vid sparande av komponenttyp:", error);
-    alert("Kunde inte spara komponenttypen. Kontrollera data och försök igen.");
-  }
-};
-
+  };
 
   // Filtrera listan baserat på söksträngen
   const filtered = componentTypes.filter(ct => {
