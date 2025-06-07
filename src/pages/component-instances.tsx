@@ -23,7 +23,8 @@ import {
   ModalFooter,
   useDisclosure,
   Select,
-  SelectItem
+  SelectItem,
+  Textarea
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 // *** ÄNDRAT: Importera fetchKomponenter, fetchFastigheter, fetchKomponenttyper, saveKomponent ***
