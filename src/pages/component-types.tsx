@@ -1,106 +1,132 @@
-// src/pages/component-types.tsx
-
 import React from "react";
 import {
-  Card,
-  CardBody,
-  Button,
-  Input,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-  Textarea,
-  Select,
-  SelectItem
+  Card, CardBody, Button, Input,
+  Table, TableHeader, TableColumn, TableBody, TableRow, TableCell,
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
+  useDisclosure, Textarea, Select, SelectItem
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
-// *** ÄNDRAT: Importera fetchKomponenttyper, saveKomponenttyp, fetchKomponentfält ***
+// Uppdaterad import: matchar exakt exportnamnen i supabaseService
 import {
   fetchKomponenttyper,
   saveKomponenttyp,
-  fetchKomponentfält
+  fetchKomponentfält  // förutsätter att supabaseService-funktionen döpts om med 'ä'
 } from "../utils/supabaseService";
 
+// Definiera typer för datamodellerna
+interface Komponentfält { 
+  id: string; 
+  Fältnamn: string; 
+  // ...övriga fältegenskaper om de finns 
+}
+interface Komponenttyp {
+  id?: string;
+  Komponent: string;
+  Beskrivning?: string;
+  "Tillåtna fält": string[];  // lagras som lista av fält-ID (uuid) i nya schemat
+  Instanser?: number;
+}
+
 const ComponentTypesPage: React.FC = () => {
-  const [componentTypes, setComponentTypes] = React.useState<any[]>([]);
-  const [componentFields, setComponentFields] = React.useState<any[]>([]);
+  const [componentTypes, setComponentTypes] = React.useState<Komponenttyp[]>([]);
+  const [componentFields, setComponentFields] = React.useState<Komponentfält[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [currentComponentType, setCurrentComponentType] = React.useState<any>(null);
+  const [currentComponentType, setCurrentComponentType] = React.useState<Komponenttyp | null>(null);
   const [selectedFields, setSelectedFields] = React.useState<string[]>([]);
 
   React.useEffect(() => {
+    // Hämta komponenttyper
     fetchKomponenttyper()
-      .then(records => {
-        setComponentTypes(records);
-      })
-      .catch(() => setComponentTypes([]));
-
+      .then(records => setComponentTypes(records || []))
+      .catch(err => {
+        console.error("Kunde inte hämta Komponenttyper:", err);
+        setComponentTypes([]);
+      });
+    // Hämta tillgängliga fält
     fetchKomponentfält()
-      .then(records => {
-        setComponentFields(records);
-      })
-      .catch(() => setComponentFields([]));
+      .then(records => setComponentFields(records || []))
+      .catch(err => {
+        console.error("Kunde inte hämta Komponentfält:", err);
+        setComponentFields([]);
+      });
   }, []);
 
-  const handleEdit = (ct: any) => {
+  const handleEdit = (ct: Komponenttyp) => {
     setCurrentComponentType(ct);
-    // ct["Tillåtna fält"] är en array med fältnamn (via relation)
-    setSelectedFields(ct["Tillåtna fält"] || []);
+    // Anta att Tillåtna fält är en array av fält-ID (uuid) i nya schemat
+    setSelectedFields(ct["Tillåtna fält"] ? [...ct["Tillåtna fält"]] : []); 
     onOpen();
   };
 
   const handleNew = () => {
-    setCurrentComponentType({ Komponent: "", Beskrivning: "", "Tillåtna fält": [] });
+    // Nytt objekt för komponenttyp
+    setCurrentComponentType({
+      Komponent: "",
+      Beskrivning: "",
+      "Tillåtna fält": []
+    });
     setSelectedFields([]);
     onOpen();
   };
 
   const saveCurrent = async () => {
-    const fields = {
-      Komponent: currentComponentType.Komponent,
-      Beskrivning: currentComponentType.Beskrivning,
-      "Tillåtna fält": selectedFields
-    };
-    const recordId = currentComponentType.id;
-    await saveKomponenttyp(fields, recordId);
-    window.location.reload();
+    if (!currentComponentType) return;
+    try {
+      // Bygg fältobjekt för sparning (använd aktuellt state)
+      const fields: Partial<Komponenttyp> = {
+        Komponent: currentComponentType.Komponent,
+        Beskrivning: currentComponentType.Beskrivning || "",
+        "Tillåtna fält": selectedFields  // array av fält-ID att spara
+      };
+      const recordId = currentComponentType.id;
+      await saveKomponenttyp(fields, recordId);
+      // Uppdatera listan lokalt istället för hel reload
+      if (recordId) {
+        // Uppdatera befintlig i state
+        setComponentTypes(prev => prev.map(ct =>
+          ct.id === recordId ? { ...ct, ...fields } as Komponenttyp : ct
+        ));
+      } else {
+        // Lägg till ny i state (saveKomponenttyp returnerar insatt rad om behövs)
+        const refreshedList = await fetchKomponenttyper().catch(() => null);
+        setComponentTypes(refreshedList || prev => [...prev]);  // försök hämta nya listan, fallback: behåll befintlig
+      }
+      onOpenChange(false); // stäng modalen
+    } catch (error: any) {
+      console.error("Fel vid sparande av komponenttyp:", error);
+      alert("Kunde inte spara komponenttypen. Kontrollera data och försök igen.");
+    }
   };
 
-  const filtered = componentTypes.filter(ct =>
-    ct.Komponent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (ct.Beskrivning || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtrera listan baserat på söksträngen
+  const filtered = componentTypes.filter(ct => {
+    const name = ct.Komponent || "";      // säkerställ sträng
+    const desc = ct.Beskrivning || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           desc.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="space-y-6">
+      {/* Sökfält och ny-knapp */}
       <div className="flex justify-between items-center">
-        <div className="flex gap-4">
-          <Input
-            placeholder="Sök komponenttyp..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            startContent={<Icon icon="lucide:search" className="text-default-400" />}
-            className="w-full sm:w-64"
-          />
-        </div>
+        <Input
+          placeholder="Sök komponenttyp..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          startContent={<Icon icon="lucide:search" className="text-default-400" />}
+          className="w-full sm:w-64"
+        />
         <Button color="primary" startContent={<Icon icon="lucide:plus" />} onPress={handleNew}>
           Ny komponenttyp
         </Button>
       </div>
 
+      {/* Tabell med komponenttyper */}
       <Card>
         <CardBody>
-          <Table removeWrapper aria-label="Komponenttyper">
+          <Table aria-label="Komponenttyper" removeWrapper>
             <TableHeader>
               <TableColumn>NAMN</TableColumn>
               <TableColumn>BESKRIVNING</TableColumn>
@@ -109,22 +135,31 @@ const ComponentTypesPage: React.FC = () => {
               <TableColumn>ÅTGÄRDER</TableColumn>
             </TableHeader>
             <TableBody emptyContent="Inga komponenttyper hittades">
-              {filtered.map(ct => (
-                <TableRow key={ct.id}>
-                  <TableCell>{ct.Komponent}</TableCell>
-                  <TableCell>{ct.Beskrivning}</TableCell>
-                  <TableCell>{(ct["Tillåtna fält"] || []).join(", ")}</TableCell>
-                  <TableCell>{ct.Instanser || 0}</TableCell>
-                  <TableCell>
-                    <Button variant="flat" size="sm" onPress={() => handleEdit(ct)} startContent={<Icon icon="lucide:edit" />} />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.map(ct => {
+                // Mappa fält-ID-lista till namnlista för visning
+                const fieldNames = (ct["Tillåtna fält"] || []).map(fid => {
+                  const f = componentFields.find(field => field.id === fid);
+                  return f ? f.Fältnamn : fid;
+                });
+                return (
+                  <TableRow key={ct.id}>
+                    <TableCell>{ct.Komponent}</TableCell>
+                    <TableCell>{ct.Beskrivning || ""}</TableCell>
+                    <TableCell>{fieldNames.join(", ")}</TableCell>
+                    <TableCell>{ct.Instanser ?? 0}</TableCell>
+                    <TableCell>
+                      <Button variant="flat" size="sm" onPress={() => handleEdit(ct)}
+                              startContent={<Icon icon="lucide:edit" />} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardBody>
       </Card>
 
+      {/* Modal för ny/redigera komponenttyp */}
       <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg">
         <ModalContent>
           <ModalHeader>{currentComponentType?.id ? "Redigera typ" : "Ny typ"}</ModalHeader>
@@ -133,23 +168,24 @@ const ComponentTypesPage: React.FC = () => {
               <Input
                 label="Komponent"
                 value={currentComponentType?.Komponent}
-                onValueChange={v => setCurrentComponentType({ ...currentComponentType, Komponent: v })}
+                onValueChange={v => setCurrentComponentType(prev => prev ? { ...prev, Komponent: v } : prev)}
                 isRequired
               />
               <Textarea
                 label="Beskrivning"
                 value={currentComponentType?.Beskrivning}
-                onValueChange={v => setCurrentComponentType({ ...currentComponentType, Beskrivning: v })}
+                onValueChange={v => setCurrentComponentType(prev => prev ? { ...prev, Beskrivning: v } : prev)}
               />
               <Select
                 label="Tillåtna fält"
                 placeholder="Välj fält"
-                defaultSelectedKeys={selectedFields}
-                onSelectionChange={(keys) => setSelectedFields(Array.from(keys) as string[])}
+                // Använd selectedKeys för kontrollerat läge med fält-ID:n
+                selectedKeys={new Set(selectedFields)}
+                onSelectionChange={keys => setSelectedFields(Array.from(keys) as string[])}
                 multiple
               >
                 {componentFields.map(f => (
-                  <SelectItem key={f.Fältnamn} value={f.Fältnamn}>
+                  <SelectItem key={f.id} value={f.id}>
                     {f.Fältnamn}
                   </SelectItem>
                 ))}
@@ -157,12 +193,8 @@ const ComponentTypesPage: React.FC = () => {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onPress={saveCurrent}>
-              Spara
-            </Button>
-            <Button variant="flat" onPress={() => onOpenChange(false)}>
-              Avbryt
-            </Button>
+            <Button color="primary" onPress={saveCurrent}>Spara</Button>
+            <Button variant="flat" onPress={() => onOpenChange(false)}>Avbryt</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
