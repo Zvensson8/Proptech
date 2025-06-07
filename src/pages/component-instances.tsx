@@ -23,7 +23,8 @@ import {
   ModalFooter,
   useDisclosure,
   Select,
-  SelectItem
+  SelectItem,
+  Textarea
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 // *** ÄNDRAT: Importera fetchKomponenter, fetchFastigheter, fetchKomponenttyper, saveKomponent ***
@@ -38,7 +39,7 @@ const ComponentInstancesPage: React.FC = () => {
   const [selectedProperty, setSelectedProperty] = React.useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = React.useState<string | null>(null);
 
-  const { isOpen, setIsOpen } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [currentComponent, setCurrentComponent] = React.useState<any>(null);
 
   React.useEffect(() => {
@@ -57,7 +58,7 @@ const ComponentInstancesPage: React.FC = () => {
 
   const handleEdit = (comp: any) => {
     setCurrentComponent(comp);
-    setIsOpen(true);
+    onOpen();
   };
 
   const handleNew = () => {
@@ -99,7 +100,7 @@ const ComponentInstancesPage: React.FC = () => {
       "Nödtel.linje": "",
       "Antal starter": ""
     });
-    setIsOpen(true);
+    onOpen();
   };
 
   const saveCurrent = async () => {
@@ -241,7 +242,7 @@ const ComponentInstancesPage: React.FC = () => {
         </CardBody>
       </Card>
 
-      <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="lg">
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg">
         <ModalContent>
           <ModalHeader>{currentComponent?.id ? "Redigera komponent" : "Ny komponent"}</ModalHeader>
           <ModalBody>
@@ -455,7 +456,7 @@ const ComponentInstancesPage: React.FC = () => {
           </ModalBody>
           <ModalFooter>
             <Button onPress={saveCurrent} color="primary">Spara</Button>
-            <Button variant="flat" onPress={() => setIsOpen(false)}>Avbryt</Button>
+            <Button variant="flat" onPress={() => onOpenChange(false)}>Avbryt</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

@@ -18,6 +18,18 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import ExportButton from "../components/export-button";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Legend
+} from "recharts";
 
 // Sample data (oförändrat)
 const monthlyData = [
